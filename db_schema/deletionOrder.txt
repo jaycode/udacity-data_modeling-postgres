@@ -1,0 +1,5 @@
+users
+songplays
+songs
+time
+artists
