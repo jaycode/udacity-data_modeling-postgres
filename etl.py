@@ -4,19 +4,39 @@ import psycopg2
 import pandas as pd
 from sql_queries import *
 import configparser
-
+import datetime
 
 def process_song_file(cur, filepath):
+    # # open song file
+    # df = pd.read_json(filepath, lines=True)
+    #
+    # # insert song record
+    # song_data = [list(row) for row in df[['song_id','title','artist_id','year','duration']].itertuples(index=False)]
+    # for song in song_data:
+    #     cur.execute(song_table_insert, song)
+    #
+    # # insert artist record
+    # artist_data = [list(row) for row in df[['artist_id', 'artist_name', 'artist_location', 'artist_latitude', 'artist_longitude']].itertuples(index=False)]
+    # for artist in artist_data:
+    #     cur.execute(artist_table_insert, artist)
+    '''This function processes the song file by extracting the data from the files and storing it in the database '''
     # open song file
     df = pd.read_json(filepath, lines=True)
 
-    # insert song record
-    song_data = df[['song_id', 'title', 'artist_id', 'year', 'duration']].values[0].tolist()
-    cur.execute(song_table_insert, song_data)
-    
-    # insert artist record
-    artist_data = df[['artist_id', 'artist_name', 'artist_location', 'artist_latitude', 'artist_longitude']].values[0].tolist()
+        # insert artist record
+    artist_data = df[['artist_id','artist_name','artist_location','artist_latitude','artist_longitude']]
+    artist_data = artist_data.iloc[0,:]
+    artist_data.values
+    artist_data = artist_data.tolist()
     cur.execute(artist_table_insert, artist_data)
+
+    # insert song record
+    song_data = df[['song_id','title','artist_id','year','duration']]
+    song_data = song_data.iloc[0,:]
+    song_data = song_data.tolist()
+    song_data[3] = int(song_data[3])
+    cur.execute(song_table_insert, song_data)
+
 
 
 def process_log_file(cur, filepath):
@@ -28,9 +48,10 @@ def process_log_file(cur, filepath):
 
     # convert timestamp column to datetime
     t = pd.to_datetime(df['ts'], unit='ms')
-    
+    df['ts'] = t.dt.time
+
     # insert time data records
-    time_data = (df['ts'], t.dt.hour, t.dt.day, t.dt.week, t.dt.month, t.dt.year, t.dt.weekday)
+    time_data = (t.dt.time, t.dt.hour, t.dt.day, t.dt.isocalendar().week, t.dt.month, t.dt.year, t.dt.weekday)
     column_labels = ('start_time', 'hour', 'day', 'week', 'month', 'year', 'weekday')
     time_df = pd.DataFrame(data=dict(zip(column_labels, time_data)))
 
@@ -46,11 +67,14 @@ def process_log_file(cur, filepath):
 
     # insert songplay records
     for index, row in df.iterrows():
-        
+
         # get songid and artistid from song and artist tables
+        # print("song: {}, artist: {}".format(row.song, row.artist))
+
         cur.execute(song_select, (row.song, row.artist, row.length))
+
         results = cur.fetchone()
-        
+
         if results:
             songid, artistid = results
         else:
@@ -96,6 +120,10 @@ def main():
 
     process_data(cur, conn, filepath='data/song_data', func=process_song_file)
     process_data(cur, conn, filepath='data/log_data', func=process_log_file)
+    cur.execute("select * from songplays WHERE song_id is not null")
+    results = cur.fetchall()
+    print("Result of `select * from songplays WHERE song_id is not null`:")
+    print(results)
 
     conn.close()
 

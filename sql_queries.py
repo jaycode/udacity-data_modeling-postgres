@@ -11,7 +11,7 @@ time_table_drop = "DROP TABLE IF EXISTS time"
 songplay_table_create = ("""
     CREATE TABLE IF NOT EXISTS songplays (
         songplay_id SERIAL,
-        start_time bigint not null,
+        start_time time not null,
         user_id int not null,
         level varchar,
         song_id varchar,
@@ -54,7 +54,7 @@ artist_table_create = ("""
 
 time_table_create = ("""
     CREATE TABLE time(
-        start_time bigint,
+        start_time time,
         hour int,
         day int,
         week int,
@@ -106,12 +106,45 @@ time_table_insert = ("""
 
 # FIND SONGS
 
+# case 1: Select by song, artist, and duration
+# song_select = ("""
+#     SELECT s.song_id, s.artist_id
+#     FROM songs s
+#         INNER JOIN artists a ON s.artist_id = a.artist_id
+#     WHERE s.title = %s AND a.name = %s AND s.duration = %s;
+# """)
+
+# case 2: Select by song and artist
+# song_select = ("""
+#     SELECT s.song_id, s.artist_id
+#     FROM songs s
+#         INNER JOIN artists a ON s.artist_id = a.artist_id
+#     WHERE s.title = %s AND a.name = %s;
+# """)
+
+# case 3: Select by song
+# song_select = ("""
+#     SELECT s.song_id
+#     FROM songs s
+#     WHERE s.title = %s;
+# """)
+
+# case 4: Select by artist
+# song_select = ("""
+#     SELECT a.artist_id
+#     FROM artists a
+#     WHERE a.name = %s;
+# """)
+
+# case 5:
 song_select = ("""
-    SELECT s.song_id, s.artist_id
-    FROM songs s 
-        INNER JOIN artists a ON s.artist_id = a.artist_id
-    WHERE s.title = %s AND a.name = %s AND s.duration = %s;
+SELECT s.song_id,a.artist_id
+FROM songs s JOIN artists a ON s.artist_id = a.artist_id
+WHERE s.title = %s AND
+a.name = %s AND
+s.duration = %s
 """)
+
 
 # QUERY LISTS
 

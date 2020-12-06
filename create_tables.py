@@ -13,20 +13,20 @@ def create_database():
 
     conn.set_session(autocommit=True)
     cur = conn.cursor()
-    
+
     # create sparkify database with UTF8 encoding
     cur.execute("DROP DATABASE IF EXISTS sparkifydb")
     cur.execute("CREATE DATABASE sparkifydb WITH ENCODING 'utf8' TEMPLATE template0")
 
     # close connection to default database
-    conn.close()    
-    
+    conn.close()
+
     # connect to sparkify database
     conn = psycopg2.connect(dbname=config['sparkify']['dbname'],
            user=config['sparkify']['user'], host=config['sparkify']['host'],
            password=config['sparkify']['password'], port=config['sparkify']['port'])
     cur = conn.cursor()
-    
+
     return cur, conn
 
 
@@ -44,7 +44,7 @@ def create_tables(cur, conn):
 
 def main():
     cur, conn = create_database()
-    
+
     drop_tables(cur, conn)
     create_tables(cur, conn)
 
